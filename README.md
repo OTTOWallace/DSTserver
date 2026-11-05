@@ -1,5 +1,7 @@
 # DSTserver · 饥荒联机版开服器
 
+> by大肥鱼deepseek · 仓库地址 https://github.com/OTTOWallace/DSTserver
+
 > by大肥鱼deepseek
 
 Windows 版《饥荒联机版》专用服务器（Don't Starve Together Dedicated Server）图形化启动器。
