@@ -158,7 +158,6 @@ dotnet run --project DSTserver.csproj
 DSTserver/          主程序（WPF / .NET 10，零第三方 NuGet 依赖，可离线构建）
   Services/         核心服务：SteamCmd、Mod、备份、配置读写、Lua 解析、服务器控制
 DSTserver.Tests/    单元/集成测试（19 项）
-DSTserver-cpp/      早期 C++ Win32 骨架（历史备份）
 bootstrap.ps1       一键装 SteamCMD + 饥荒专用服务器
 settings.example.json  配置模板（真实 settings.json 不入库）
 .github/workflows/  CI 自动构建
