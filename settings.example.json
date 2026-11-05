@@ -1,0 +1,21 @@
+{
+  "SteamCmdDir": "",
+  "Cluster": {
+    "ClusterName": "找啊找啊找饥友",
+    "Description": "",
+    "Password": "",
+    "GameMode": "survival",
+    "MaxPlayers": 6,
+    "Pvp": false,
+    "PauseWhenEmpty": true,
+    "EnableCaves": true,
+    "ClusterSlot": 1,
+    "Token": ""
+  },
+  "EnableScheduledBackup": true,
+  "BackupIntervalHours": 24,
+  "EnableModAutoCheck": true,
+  "ModCheckIntervalHours": 24,
+  "LastBackupUtc": "0001-01-01T00:00:00",
+  "LastModCheckUtc": "0001-01-01T00:00:00"
+}

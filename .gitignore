@@ -1,0 +1,31 @@
+# 构建产物
+**/bin/
+**/obj/
+
+# 运行时（steamcmd + 饥荒专用服务器本体，约 4.3 GB，不入库）
+# 用仓库根目录的 bootstrap.ps1 一键重建
+**/runtime/
+
+# 本地备份
+**/backups/
+
+# 本地配置（含 Klei 服务器令牌，不入库；模板见 settings.example.json）
+**/settings.json
+
+# Visual Studio / 用户文件
+.vs/
+*.user
+*.suo
+
+# 发布产物
+**/publish/
+
+# 日志与临时文件
+*.log
+*.zip
+*.7z
+Thumbs.db
+
+# 仓库根目录的临时抓取与截图
+/*.html
+/*.png
