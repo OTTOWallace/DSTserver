@@ -1,0 +1,57 @@
+name: build
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: 编译（Release）
+        run: dotnet build DSTserver/DSTserver.csproj -c Release --nologo
+
+      - name: 运行测试套件
+        run: dotnet run --project DSTserver.Tests/DSTserver.Tests.csproj -c Debug
+
+      - name: 发布（框架依赖）
+        run: dotnet publish DSTserver/DSTserver.csproj -c Release --no-self-contained --nologo
+
+      - name: 上传构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: DSTserver-release
+          path: DSTserver/bin/Release/net10.0-windows/publish/
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: 下载构建产物
+        uses: actions/download-artifact@v4
+        with:
+          name: DSTserver-release
+          path: publish
+
+      - name: 打包
+        run: |
+          cd publish
+          zip -r ../DSTserver-${{ github.ref_name }}.zip .
+
+      - name: 创建 GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: DSTserver-${{ github.ref_name }}.zip
+          generate_release_notes: true
