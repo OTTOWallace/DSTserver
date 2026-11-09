@@ -37,7 +37,7 @@ Windows 版《饥荒联机版》（Don't Starve Together / DST）**专用服务�
 |---|---|
 | 服务器 | 一键安装 / 更新专用服务器（SteamCMD + app 343050），Master + Caves 双分片启停，实时日志 |
 | Mod | 输入创意工坊编号直接下载；增删 / 启用停用 / 全选批量删除；自动解析 `modinfo.lua` 配置项生成编辑控件 |
-| 世界 | 20 项世界生成变量（世界大小、季节、昼夜、分支、资源再生等），写入 `worldgenoverride.lua` |
+| 世界 | 20 项世界生成变量（世界大小、季节、昼夜、分支、资源再生等），地上/地下独立设置，分别写入 `worldgenoverride.lua` |
 | 存档 | 5 个存档槽位独立切换；定时备份（可配周期）；按日期回档窗口；服务器内 `c_rollback` 快照回档 |
 | 控制台 | 指令直发服务器 stdin；一键存档 `c_save()`；在线玩家列表每 5 秒刷新；选中玩家快捷给予物品（60+ 物品下拉） |
 | 定时任务 | 自动检查 mod 更新、自动备份（默认各 24 小时，可在 `settings.json` 调整） |
@@ -98,7 +98,7 @@ dotnet run --project DSTserver.csproj
 
 ### 世界设置
 
-- 20 项 worldgen 变量，可勾选「同时应用到洞穴」
+- 20 项 worldgen 变量，**地上（Master）与地下（Caves）分标签独立设置**，各自写入 `Master\worldgenoverride.lua` 与 `Caves\worldgenoverride.lua`
 - **只在创建新世界时生效**：改完需删除旧存档（`Cluster_N\Master\save` 等）重新生成
 
 ### 玩家与控制台

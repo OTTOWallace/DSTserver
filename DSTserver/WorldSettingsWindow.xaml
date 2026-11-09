@@ -1,7 +1,7 @@
 <Window x:Class="DSTserver.WorldSettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="世界设置" Height="640" Width="620"
+        Title="世界设置" Height="660" Width="640"
         WindowStartupLocation="CenterOwner" FontSize="13">
     <Grid Margin="14">
         <Grid.RowDefinitions>
@@ -9,17 +9,23 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <TextBlock Grid.Row="0" Text="世界生成变量（只在创建新世界时生效；修改后需要删除旧存档重新生成）"
+        <TextBlock Grid.Row="0" Text="地上（Master）与地下（Caves）分别独立设置世界生成变量。只在创建新世界时生效；修改后需要删除旧存档重新生成。"
                    Foreground="#B45309" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,8"/>
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <StackPanel x:Name="PnlWorld"/>
-        </ScrollViewer>
-        <StackPanel Grid.Row="2" Margin="0,10,0,0">
-            <CheckBox x:Name="ChkApplyCaves" Content="同时应用到洞穴" IsChecked="True"/>
-            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                <Button x:Name="BtnSave" Content="保存世界设置" Click="BtnSave_Click" Padding="16,6" FontSize="14"/>
-                <TextBlock x:Name="TxtHint" VerticalAlignment="Center" Margin="14,0,0,0" Foreground="Gray" FontSize="11" TextWrapping="Wrap"/>
-            </StackPanel>
+        <TabControl Grid.Row="1">
+            <TabItem Header="地上 · Master">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel x:Name="PnlWorldMaster" Margin="4"/>
+                </ScrollViewer>
+            </TabItem>
+            <TabItem Header="地下 · Caves">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel x:Name="PnlWorldCaves" Margin="4"/>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,0">
+            <Button x:Name="BtnSave" Content="保存世界设置" Click="BtnSave_Click" Padding="16,6" FontSize="14"/>
+            <TextBlock x:Name="TxtHint" VerticalAlignment="Center" Margin="14,0,0,0" Foreground="Gray" FontSize="11" TextWrapping="Wrap"/>
         </StackPanel>
     </Grid>
 </Window>

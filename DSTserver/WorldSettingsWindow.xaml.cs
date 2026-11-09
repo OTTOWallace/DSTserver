@@ -11,8 +11,8 @@ namespace DSTserver;
 public partial class WorldSettingsWindow : Window
 {
     private readonly string _clusterDir;
-    private readonly List<(WorldSettingDef Def, ComboBox Cmb)> _controls = new();
-    private readonly Dictionary<string, object?> _current;
+    private readonly List<(WorldSettingDef Def, ComboBox Cmb)> _masterControls = new();
+    private readonly List<(WorldSettingDef Def, ComboBox Cmb)> _cavesControls = new();
 
     private static readonly (string Desc, string Data)[] SeasonLen = new[]
     {
@@ -53,8 +53,20 @@ public partial class WorldSettingsWindow : Window
     {
         InitializeComponent();
         _clusterDir = AppPaths.ClusterDir(settings.Cluster.ClusterSlot);
-        _current = LuaFileIo.ParseWorldgenOverrides(Path.Combine(_clusterDir, "Master", "worldgenoverride.lua"));
 
+        var masterCurrent = LuaFileIo.ParseWorldgenOverrides(
+            Path.Combine(_clusterDir, "Master", "worldgenoverride.lua"));
+        var cavesCurrent = LuaFileIo.ParseWorldgenOverrides(
+            Path.Combine(_clusterDir, "Caves", "worldgenoverride.lua"));
+
+        BuildPanel(PnlWorldMaster, masterCurrent, _masterControls);
+        BuildPanel(PnlWorldCaves, cavesCurrent, _cavesControls);
+    }
+
+    /// <summary>按当前值渲染一组变量控件。</summary>
+    private void BuildPanel(StackPanel panel, Dictionary<string, object?> current,
+        List<(WorldSettingDef Def, ComboBox Cmb)> controls)
+    {
         foreach (var (key, label, opts) in Defs)
         {
             var grid = new Grid { Margin = new Thickness(0, 3, 0, 3) };
@@ -71,7 +83,7 @@ public partial class WorldSettingsWindow : Window
                 HorizontalAlignment = HorizontalAlignment.Stretch,
             };
             int sel = 0;
-            object? cur = _current.TryGetValue(key, out var cv) ? cv : "default";
+            object? cur = current.TryGetValue(key, out var cv) ? cv : "default";
             for (int i = 0; i < opts.Length; i++)
             {
                 cmb.Items.Add(new OptionItem { Description = opts[i].Desc, Data = opts[i].Data });
@@ -81,25 +93,32 @@ public partial class WorldSettingsWindow : Window
             Grid.SetColumn(cmb, 1);
             grid.Children.Add(cmb);
 
-            _controls.Add((new WorldSettingDef { Key = key, Label = label }, cmb));
-            PnlWorld.Children.Add(grid);
+            controls.Add((new WorldSettingDef { Key = key, Label = label }, cmb));
+            panel.Children.Add(grid);
         }
     }
 
-    private void BtnSave_Click(object sender, RoutedEventArgs e)
+    /// <summary>从控件收集非默认值。</summary>
+    private static Dictionary<string, object?> CollectOverrides(
+        List<(WorldSettingDef Def, ComboBox Cmb)> controls)
     {
         var overrides = new Dictionary<string, object?>();
-        foreach (var (def, cmb) in _controls)
+        foreach (var (def, cmb) in controls)
         {
             if (cmb.SelectedItem is OptionItem oi && oi.Data is string s && s != "default")
                 overrides[def.Key] = s;
         }
+        return overrides;
+    }
 
-        ConfigWriter.WriteWorldgenOverride(Path.Combine(_clusterDir, "Master"), overrides);
-        bool applyCaves = ChkApplyCaves.IsChecked == true;
-        if (applyCaves)
-            ConfigWriter.WriteWorldgenOverride(Path.Combine(_clusterDir, "Caves"), overrides);
+    private void BtnSave_Click(object sender, RoutedEventArgs e)
+    {
+        var master = CollectOverrides(_masterControls);
+        var caves = CollectOverrides(_cavesControls);
 
-        TxtHint.Text = $"已保存 {overrides.Count} 项到 worldgenoverride.lua（{(applyCaves ? "Master + Caves" : "仅 Master")}）";
+        ConfigWriter.WriteWorldgenOverride(Path.Combine(_clusterDir, "Master"), master);
+        ConfigWriter.WriteWorldgenOverride(Path.Combine(_clusterDir, "Caves"), caves);
+
+        TxtHint.Text = $"已保存：地上 {master.Count} 项、地下 {caves.Count} 项（各自写入 worldgenoverride.lua）";
     }
 }
