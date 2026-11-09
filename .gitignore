@@ -20,6 +20,9 @@
 # 发布产物
 **/publish/
 
+# 安装包构建目录（产物不入库，仅发布到 Release）
+installer/
+
 # 日志与临时文件
 *.log
 *.zip
