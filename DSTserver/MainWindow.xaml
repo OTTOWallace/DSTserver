@@ -18,6 +18,7 @@
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                     <TextBlock Text="存档槽位" VerticalAlignment="Center" FontSize="12"/>
                     <ComboBox x:Name="CmbSlot" Margin="8,0,0,0" Width="220" SelectionChanged="CmbSlot_SelectionChanged" Padding="4,2"/>
+                    <Button x:Name="BtnDeleteSave" Content="删除存档" Click="BtnDeleteSave_Click" Padding="8,2" Margin="12,0,0,0" Foreground="#B91C1C"/>
                 </StackPanel>
 
                 <TextBlock Text="服务器名称" FontSize="12"/>
@@ -67,7 +68,6 @@
                     <Button x:Name="BtnBackupNow" Content="立即备份" Click="BtnBackupNow_Click" Padding="10,5"/>
                     <Button x:Name="BtnRollback" Content="回档窗口" Click="BtnRollback_Click" Padding="10,5" Margin="8,0,0,0"/>
                     <Button x:Name="BtnModCheck" Content="检查 mod 更新" Click="BtnModCheck_Click" Padding="10,5" Margin="8,0,0,0"/>
-                    <Button x:Name="BtnDeleteSave" Content="删除存档" Click="BtnDeleteSave_Click" Padding="10,5" Margin="8,0,0,0" Foreground="#B91C1C"/>
                 </StackPanel>
                 <TextBlock x:Name="TxtSchedule" TextWrapping="Wrap" Foreground="Gray" FontSize="11" Margin="0,6,0,0"/>
             </StackPanel>
