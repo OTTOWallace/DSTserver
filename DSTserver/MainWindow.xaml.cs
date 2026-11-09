@@ -397,6 +397,12 @@ public partial class MainWindow : Window
         win.ShowDialog();
     }
 
+    private void BtnDeleteSave_Click(object sender, RoutedEventArgs e)
+    {
+        var win = new DeleteSaveWindow(AppendLog, () => _controller.IsRunning) { Owner = this };
+        win.ShowDialog();
+    }
+
     // ---------- mod 更新检查 ----------
 
     private async void BtnModCheck_Click(object sender, RoutedEventArgs e)
