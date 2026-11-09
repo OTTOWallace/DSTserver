@@ -120,6 +120,16 @@ public static class BackupService
         }
     }
 
+    /// <summary>删除一个备份目录。</summary>
+    public static void DeleteBackup(string backupDir)
+    {
+        try
+        {
+            if (Directory.Exists(backupDir)) Directory.Delete(backupDir, true);
+        }
+        catch { }
+    }
+
     private static void DeleteDir(string dir)
     {
         try

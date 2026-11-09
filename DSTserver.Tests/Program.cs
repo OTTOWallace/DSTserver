@@ -14,6 +14,7 @@ if (args.Length > 0)
         case "--genconfig": return GenConfig();
         case "--test-mod": return await TestMod(args.Length > 1 ? args[1] : "378160973");
         case "--del-mod": return DelMod(args.Length > 1 ? args[1] : "");
+        case "--rebuild-overrides": return RebuildOverrides();
         default:
             Console.WriteLine("unknown arg: " + args[0]);
             return 1;
@@ -113,6 +114,36 @@ static int DelMod(string id)
     mods.Delete(id);
     Console.WriteLine("已删除 " + id);
     return 0;
+}
+
+// ---- 用已安装 mod 的默认配置重建 modoverrides（全部启用）----
+static int RebuildOverrides()
+{
+    const string steamDir = @"C:\VSPJ\DSTserver\bin\Debug\net10.0-windows\runtime\steamcmd";
+    string clusterDir = AppPaths.ClusterDir(1);
+    var mods = new ModService(steamDir, clusterDir);
+    var list = mods.ListInstalled();
+
+    var overrides = new Dictionary<string, OverrideEntry>();
+    foreach (var m in list)
+    {
+        string mi = Path.Combine(m.Folder, "modinfo.lua");
+        if (!File.Exists(mi)) { Console.WriteLine($"跳过（无 modinfo）: {m.Name}"); continue; }
+        var meta = ModInfoParser.ParseFile(mi);
+        var e = new OverrideEntry { Enabled = true };
+        foreach (var o in meta.Options) e.Options[o.Name] = o.Default;
+        overrides[m.Id] = e;
+    }
+
+    mods.SaveOverrides(Path.Combine(clusterDir, "Master"), overrides);
+    mods.SaveOverrides(Path.Combine(clusterDir, "Caves"), overrides);
+    Console.WriteLine($"已重建 {overrides.Count} 个 mod 的启用配置（Master + Caves，全部 enabled=true + 默认参数）");
+
+    // 回读验证
+    var back = mods.LoadOverrides();
+    int enabled = back.Values.Count(v => v.Enabled);
+    Console.WriteLine($"回读: {back.Count} 个条目，启用 {enabled} 个");
+    return back.Count == 0 || enabled != back.Count ? 1 : 0;
 }
 
 static int GenConfig()

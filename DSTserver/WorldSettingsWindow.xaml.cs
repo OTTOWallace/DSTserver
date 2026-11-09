@@ -53,6 +53,7 @@ public partial class WorldSettingsWindow : Window
     {
         InitializeComponent();
         _clusterDir = AppPaths.ClusterDir(settings.Cluster.ClusterSlot);
+        Title = $"世界设置（存档 {settings.Cluster.ClusterSlot} · {SaveService.GetSlotName(settings.Cluster.ClusterSlot)}）";
 
         var masterCurrent = LuaFileIo.ParseWorldgenOverrides(
             Path.Combine(_clusterDir, "Master", "worldgenoverride.lua"));

@@ -15,6 +15,7 @@ public partial class RollbackWindow : Window
     private readonly Func<bool> _isRunning;
     private readonly Action _stopServer;
     private List<BackupInfo> _all = new();
+    private bool _suppressSelectAll;
 
     public RollbackWindow(AppSettings settings, Action<string> log, Func<bool> isRunning, Action stopServer)
     {
@@ -23,6 +24,7 @@ public partial class RollbackWindow : Window
         _log = log;
         _isRunning = isRunning;
         _stopServer = stopServer;
+        Title = $"存档回档（存档 {settings.Cluster.ClusterSlot} · {SaveService.GetSlotName(settings.Cluster.ClusterSlot)}）";
 
         CmbRange.Items.Add(new ComboBoxItem { Content = "全部", Tag = 0 });
         CmbRange.Items.Add(new ComboBoxItem { Content = "最近 1 天", Tag = 1 });
@@ -34,6 +36,11 @@ public partial class RollbackWindow : Window
         RefreshList();
     }
 
+    private IEnumerable<BackupInfo> CurrentBackups =>
+        LstBackups.ItemsSource as IEnumerable<BackupInfo> ?? Enumerable.Empty<BackupInfo>();
+
+    private List<BackupInfo> CheckedBackups => CurrentBackups.Where(b => b.Selected).ToList();
+
     private void RefreshList()
     {
         _all = BackupService.ListBackups(_clusterDir);
@@ -43,7 +50,56 @@ public partial class RollbackWindow : Window
             : _all.Where(b => (DateTime.Now - b.Time).TotalDays <= days).ToList();
         LstBackups.ItemsSource = null;
         LstBackups.ItemsSource = filtered;
+        _suppressSelectAll = true;
+        ChkSelectAll.IsChecked = false;
+        _suppressSelectAll = false;
+        RefreshCheckedCount();
         TxtStatus.Text = $"共 {filtered.Count} 个备份";
+    }
+
+    private void RefreshCheckedCount() =>
+        TxtCheckedCount.Text = $"已勾选 {CheckedBackups.Count} 个";
+
+    private void ChkSelectAll_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_suppressSelectAll) return;
+        bool on = ChkSelectAll.IsChecked == true;
+        foreach (var b in CurrentBackups) b.Selected = on;
+        RefreshCheckedCount();
+    }
+
+    private void BackupSelChanged(object sender, RoutedEventArgs e) => RefreshCheckedCount();
+
+    private void BtnDeleteChecked_Click(object sender, RoutedEventArgs e)
+    {
+        var targets = CheckedBackups;
+        if (targets.Count == 0)
+        {
+            MessageBox.Show(this, "请先勾选要删除的备份。", "删除备份",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+        var r = MessageBox.Show(this,
+            $"确定删除 {targets.Count} 个备份？\n此操作不可撤销。",
+            "确认删除备份", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+        if (r != MessageBoxResult.Yes) return;
+
+        int done = 0;
+        foreach (var b in targets)
+        {
+            try
+            {
+                BackupService.DeleteBackup(b.Path);
+                _log($"备份已删除：{b.Display}");
+                done++;
+            }
+            catch (Exception ex)
+            {
+                _log($"删除备份失败 {b.Display}: {ex.Message}");
+            }
+        }
+        RefreshList();
+        TxtStatus.Text = $"已删除 {done} 个备份";
     }
 
     private void CmbRange_SelectionChanged(object sender, SelectionChangedEventArgs e) => RefreshList();

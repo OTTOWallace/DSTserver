@@ -156,42 +156,16 @@ public partial class MainWindow : Window
     {
         _suppressSlotEvent = true;
         CmbSlot.Items.Clear();
-        for (int slot = 1; slot <= 5; slot++)
+        for (int slot = 1; slot <= 20; slot++)
         {
-            string dir = AppPaths.ClusterDir(slot);
-            string label = $"存档 {slot}";
-            if (Directory.Exists(dir))
-            {
-                string name = ReadClusterName(dir);
-                if (!string.IsNullOrEmpty(name)) label += $" — {name}";
-                else label += " —（已创建）";
-            }
-            else
-            {
-                label += " —（未创建）";
-            }
+            string name = SaveService.GetSlotName(slot);
+            string label = $"存档 {slot} — {name}";
             var item = new ComboBoxItem { Content = label, Tag = slot };
             CmbSlot.Items.Add(item);
             if (slot == _settings.Cluster.ClusterSlot) CmbSlot.SelectedItem = item;
         }
         _suppressSlotEvent = false;
         if (CmbSlot.SelectedItem == null && CmbSlot.Items.Count > 0) CmbSlot.SelectedIndex = 0;
-    }
-
-    private static string ReadClusterName(string clusterDir)
-    {
-        try
-        {
-            string ini = Path.Combine(clusterDir, "cluster.ini");
-            if (!File.Exists(ini)) return "";
-            foreach (var line in File.ReadAllLines(ini))
-            {
-                var m = System.Text.RegularExpressions.Regex.Match(line, @"cluster_name\s*=\s*(.+)");
-                if (m.Success) return m.Groups[1].Value.Trim();
-            }
-        }
-        catch { }
-        return "";
     }
 
     private void CmbSlot_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -403,18 +377,12 @@ public partial class MainWindow : Window
         win.ShowDialog();
     }
 
-    // ---------- mod 更新检查 ----------
-
-    private async void BtnModCheck_Click(object sender, RoutedEventArgs e)
-    {
-        await CheckModUpdatesAsync();
-    }
+    // ---------- mod 更新检查（定时任务用；手动入口已整合进 Mod 管理窗口）----------
 
     private async Task CheckModUpdatesAsync()
     {
         if (_busyModCheck) return;
         _busyModCheck = true;
-        BtnModCheck.IsEnabled = false;
         string steamDir = AppPaths.SteamCmdDir(_settings.SteamCmdDir);
         string clusterDir = CurrentClusterDir();
         var mods = new ModService(steamDir, clusterDir);
@@ -438,7 +406,6 @@ public partial class MainWindow : Window
         finally
         {
             _busyModCheck = false;
-            BtnModCheck.IsEnabled = true;
             RefreshScheduleText();
         }
     }
@@ -480,7 +447,7 @@ public partial class MainWindow : Window
                 "DSTserver", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
-        var win = new ModManagerWindow(_settings) { Owner = this };
+        var win = new ModManagerWindow(_settings, AppendLog) { Owner = this };
         win.ShowDialog();
     }
 

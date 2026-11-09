@@ -17,16 +17,20 @@ public partial class ModManagerWindow : Window
 {
     private readonly ModService _mods;
     private readonly string _clusterDir;
+    private readonly Action<string>? _log;
     private CancellationTokenSource? _cts;
     private InstalledMod? _selected;
     private readonly List<(ModOption Opt, FrameworkElement Ctl)> _optionControls = new();
     private bool _suppressSelectAll;
+    private bool _suppressEnable;
 
-    public ModManagerWindow(AppSettings settings)
+    public ModManagerWindow(AppSettings settings, Action<string>? log = null)
     {
         InitializeComponent();
+        _log = log;
         _clusterDir = AppPaths.ClusterDir(settings.Cluster.ClusterSlot);
         _mods = new ModService(AppPaths.SteamCmdDir(settings.SteamCmdDir), _clusterDir);
+        Title = $"Mod 管理（存档 {settings.Cluster.ClusterSlot} · {SaveService.GetSlotName(settings.Cluster.ClusterSlot)}）";
         RefreshList();
     }
 
@@ -77,14 +81,16 @@ public partial class ModManagerWindow : Window
         {
             TxtStatus.Text = s;
             TxtStatus.ToolTip = s;
+            _log?.Invoke("[mod] " + s);
         });
         BtnDownload.IsEnabled = false;
         try
         {
+            _log?.Invoke($"[mod] 开始下载 {id}...");
             await _mods.DownloadAsync(id, progress, _cts.Token);
         }
-        catch (OperationCanceledException) { TxtStatus.Text = "已取消"; }
-        catch (Exception ex) { TxtStatus.Text = "失败: " + ex.Message; }
+        catch (OperationCanceledException) { TxtStatus.Text = "已取消"; _log?.Invoke("[mod] 下载已取消"); }
+        catch (Exception ex) { TxtStatus.Text = "失败: " + ex.Message; _log?.Invoke("[mod] 下载失败: " + ex.Message); }
         finally
         {
             BtnDownload.IsEnabled = true;
@@ -102,20 +108,24 @@ public partial class ModManagerWindow : Window
         {
             TxtStatus.Text = s;
             TxtStatus.ToolTip = s;
+            _log?.Invoke("[mod] " + s);
         });
         BtnCheckUpdates.IsEnabled = false;
         try
         {
             var installed = _mods.ListInstalled();
+            _log?.Invoke($"[mod] 开始检查 {installed.Count} 个 mod 的更新...");
             foreach (var m in installed)
             {
                 TxtStatus.Text = $"更新 {m.Name}（{m.Id}）...";
+                _log?.Invoke($"[mod] 更新 {m.Name}（{m.Id}）...");
                 await _mods.DownloadAsync(m.Id, progress, _cts.Token);
             }
             TxtStatus.Text = $"全部 {installed.Count} 个 mod 检查完成";
+            _log?.Invoke($"[mod] 全部 {installed.Count} 个 mod 检查完成");
         }
-        catch (OperationCanceledException) { TxtStatus.Text = "已取消"; }
-        catch (Exception ex) { TxtStatus.Text = "失败: " + ex.Message; }
+        catch (OperationCanceledException) { TxtStatus.Text = "已取消"; _log?.Invoke("[mod] 检查已取消"); }
+        catch (Exception ex) { TxtStatus.Text = "失败: " + ex.Message; _log?.Invoke("[mod] 检查失败: " + ex.Message); }
         finally
         {
             BtnCheckUpdates.IsEnabled = true;
@@ -133,12 +143,19 @@ public partial class ModManagerWindow : Window
     {
         PnlOptions.Children.Clear();
         _optionControls.Clear();
+        _suppressEnable = true;
         if (mod == null)
         {
             TxtModTitle.Text = "未选择 mod";
             TxtCfgHint.Text = "";
+            ChkEnable.IsChecked = false;
+            ChkEnable.IsEnabled = false;
+            _suppressEnable = false;
             return;
         }
+        ChkEnable.IsChecked = mod.Enabled;
+        ChkEnable.IsEnabled = true;
+        _suppressEnable = false;
 
         string modinfo = Path.Combine(mod.Folder, "modinfo.lua");
         if (!File.Exists(modinfo))
@@ -279,11 +296,16 @@ public partial class ModManagerWindow : Window
         TxtCfgHint.Text = "已保存到 Master 与 Caves 的 modoverrides.lua";
     }
 
-    private void ModCheckedChanged(object sender, RoutedEventArgs e)
+    private void ChkEnable_Changed(object sender, RoutedEventArgs e)
     {
-        if (sender is CheckBox chk && chk.DataContext is InstalledMod mod)
+        if (_suppressEnable) return;
+        if (_selected != null)
         {
-            _mods.SetEnabled(mod.Id, chk.IsChecked == true);
+            _mods.SetEnabled(_selected.Id, ChkEnable.IsChecked == true);
+            _selected.Enabled = ChkEnable.IsChecked == true;
+            TxtCfgHint.Text = ChkEnable.IsChecked == true
+                ? "已启用（写入 modoverrides.lua）"
+                : "已停用（写入 modoverrides.lua）";
         }
     }
 

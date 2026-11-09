@@ -97,13 +97,24 @@ public class PlayerInfo
 }
 
 /// <summary>一次存档备份。</summary>
-public class BackupInfo
+public class BackupInfo : System.ComponentModel.INotifyPropertyChanged
 {
+    private bool _selected;
+
     public string Path { get; set; } = "";
     public DateTime Time { get; set; }
     public string Slot { get; set; } = "";
     public string Display => Time.ToString("yyyy-MM-dd HH:mm:ss");
     public override string ToString() => Display;
+
+    /// <summary>回档窗口里的勾选状态（用于批量删除，不持久化）。</summary>
+    public bool Selected
+    {
+        get => _selected;
+        set { _selected = value; PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(Selected))); }
+    }
+
+    public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
 }
 
 /// <summary>快捷指令的物品条目。</summary>

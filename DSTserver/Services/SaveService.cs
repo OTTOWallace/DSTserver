@@ -38,14 +38,14 @@ public class SlotInfo : INotifyPropertyChanged
 /// <summary>存档（世界数据）的查询与删除。</summary>
 public static class SaveService
 {
-    /// <summary>列出 5 个槽位的存档信息。</summary>
+    /// <summary>列出全部（20 个）槽位的存档信息。</summary>
     public static List<SlotInfo> ListSlots()
     {
         var list = new List<SlotInfo>();
-        for (int slot = 1; slot <= 5; slot++)
+        for (int slot = 1; slot <= 20; slot++)
         {
             string dir = AppPaths.ClusterDir(slot);
-            var info = new SlotInfo { Slot = slot, Name = ReadClusterName(dir) };
+            var info = new SlotInfo { Slot = slot, Name = GetSlotName(slot) };
 
             long bytes = 0;
             bool hasSave = false;
@@ -68,21 +68,13 @@ public static class SaveService
         return list;
     }
 
-    /// <summary>删除指定槽位的世界存档（Master/Caves 的 save 目录），保留服务器配置。</summary>
-    public static void DeleteSaves(string clusterDir)
+    /// <summary>槽位的服务器名；未创建时返回“（未创建）”。</summary>
+    public static string GetSlotName(int slot)
     {
-        foreach (var shard in new[] { "Master", "Caves" })
-        {
-            string save = Path.Combine(clusterDir, shard, "save");
-            try { if (Directory.Exists(save)) Directory.Delete(save, true); } catch { }
-        }
-    }
-
-    private static string ReadClusterName(string clusterDir)
-    {
+        string dir = AppPaths.ClusterDir(slot);
         try
         {
-            string ini = Path.Combine(clusterDir, "cluster.ini");
+            string ini = Path.Combine(dir, "cluster.ini");
             if (!File.Exists(ini)) return "（未创建）";
             foreach (var line in File.ReadAllLines(ini))
             {
@@ -92,5 +84,15 @@ public static class SaveService
         }
         catch { }
         return "（未创建）";
+    }
+
+    /// <summary>删除指定槽位的世界存档（Master/Caves 的 save 目录），保留服务器配置。</summary>
+    public static void DeleteSaves(string clusterDir)
+    {
+        foreach (var shard in new[] { "Master", "Caves" })
+        {
+            string save = Path.Combine(clusterDir, shard, "save");
+            try { if (Directory.Exists(save)) Directory.Delete(save, true); } catch { }
+        }
     }
 }
